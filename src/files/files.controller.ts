@@ -1,5 +1,4 @@
-/* eslint-disable prettier/prettier */
-import { Controller, Get, Post, Param, Delete, UseGuards, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, Query } from '@nestjs/common';
+import { Controller, Get, Post, Delete, UseGuards, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express/multer';
 
@@ -51,8 +50,8 @@ export class FilesController {
     return this.filesService.findAll(userId, type);
   }
 
-  @Delete(':ids')
-  remove(@UserId() userId: number, @Param('ids') ids: string) {
+  @Delete()
+  remove(@UserId() userId: number, @Query('ids') ids: string) {
     return this.filesService.remove(userId, ids);
   }
 }

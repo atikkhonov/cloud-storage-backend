@@ -1,9 +1,6 @@
-/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
-import { unlinkSync } from 'fs'
-import { join } from 'path'
 
 import { FileEntity, FileType } from './entities/file.entity';
 import { generateId } from './storage';
@@ -46,21 +43,6 @@ export class FilesService {
     const qb = this.repository.createQueryBuilder('file');
 
     const idsArray = ids.split(',');
-
-    qb.where('id IN (:...ids) AND file.userId = :userId', {
-      ids: idsArray, 
-      userId, 
-    });
-
-    const files = await qb.getMany();
-
-    for (const file of files) {
-      try {
-        unlinkSync(join(__dirname, '../..', 'uploads', file.filename));
-      } catch (error) {
-        console.log(`Failed to upload file: ${file.filename}`)
-      }
-    }
 
     return qb
       .where('id IN (:...ids) AND userId = :userId', {

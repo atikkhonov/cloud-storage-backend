@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { diskStorage } from 'multer'
 
 export const generateId = () =>
