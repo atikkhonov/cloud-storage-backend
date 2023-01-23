@@ -1,26 +1,44 @@
 import { Injectable } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import { ForbiddenException } from '@nestjs/common/exceptions/forbidden.exception';
+import { JwtService } from '@nestjs/jwt';
+
+import { CreateUserDto } from '../users/dto/create-user.dto';
+import { UserEntity } from '../users/entities/user.entity';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
+  constructor(
+    private usersService: UsersService,
+    private jwtService: JwtService,
+  ) {}
+
+  async validateUser(email: string, password: string): Promise<any> {
+    const user = await this.usersService.findByEmail(email);
+    if (user && user.password === password) {
+      const { password, ...result } = user;
+      return result;
+    }
+    return null;
   }
 
-  findAll() {
-    return `This action returns all auth`;
+  async login(user: UserEntity) {
+    const payload = { id: user.id };
+    return {
+      token: this.jwtService.sign(payload),
+    };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
+  async register(dto: CreateUserDto) {
+    try {
+      const userData = await this.usersService.create(dto);
 
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+      return {
+        token: this.jwtService.sign({ id: userData.id }),
+      };
+    } catch (err) {
+      console.log(err);
+      throw new ForbiddenException('Authorization error');
+    }
   }
 }

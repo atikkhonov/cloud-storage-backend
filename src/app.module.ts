@@ -6,16 +6,20 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from './users/entities/user.entity';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'kandula.db.elephantsql.com',
-      port: 5432,
-      username: 'pskbcubu',
-      password: '3KE3vKvz1k_toKOc6NTVBizB5kyK07Yj',
-      database: 'pskbcubu',
+      host: process.env.DB_HOST,
+      port: +process.env.DB_PORT || 5432,
+      username: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
       entities: [UserEntity],
       synchronize: true,
     }),
