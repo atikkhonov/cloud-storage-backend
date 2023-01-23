@@ -1,11 +1,13 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Get, Post, Param, Delete, UseGuards, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator } from '@nestjs/common';
+import { Controller, Get, Post, Param, Delete, UseGuards, UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express/multer';
 
 import { FilesService } from './files.service';
 import { JwtAuthGuard } from 'src/auth/guards/local-auth.guard';
 import { fileStorage } from './storage';
+import { UserId } from 'src/decorators/user-id.decorator';
+import { FileType } from './entities/file.entity';
 
 @Controller('files')
 @ApiTags('files')
@@ -39,17 +41,18 @@ export class FilesController {
       }),
     )
     file: Express.Multer.File,
+    @UserId() userId: number
   ) {
-    return file;
+    return this.filesService.create(file, userId);
   }
 
   @Get()
-  findAll() {
-    return this.filesService.findAll();
+  findAll(@UserId() userId: number, @Query('type') type: FileType) {
+    return this.filesService.findAll(userId, type);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.filesService.remove(+id);
+  @Delete(':ids')
+  remove(@UserId() userId: number, @Param('ids') ids: string) {
+    return this.filesService.remove(userId, ids);
   }
 }

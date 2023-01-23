@@ -2,8 +2,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm'
 import { Repository } from 'typeorm'
+import { unlinkSync } from 'fs'
+import { join } from 'path'
 
-import { FileEntity } from './entities/file.entity';
+import { FileEntity, FileType } from './entities/file.entity';
 import { generateId } from './storage';
 
 @Injectable()
@@ -24,11 +26,48 @@ export class FilesService {
     });
   }
 
-  findAll() {
-    return `This action returns all files`;
+  findAll(userId: number, type: FileType) {
+    const qb = this.repository.createQueryBuilder('file');
+
+    qb.where('file.userId = :userId', { userId });
+
+    if (type === FileType.PHOTOS) {
+      qb.andWhere('file.mimetype ILIKE :type', { type: '%image%' });
+    }
+    
+    if (type === FileType.TRASH) {
+      qb.withDeleted().andWhere('file.deletedAt IS NOT NULL');
+    }
+    
+    return qb.getMany();
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} file`;
+  async remove(userId: number, ids: string) {
+    const qb = this.repository.createQueryBuilder('file');
+
+    const idsArray = ids.split(',');
+
+    qb.where('id IN (:...ids) AND file.userId = :userId', {
+      ids: idsArray, 
+      userId, 
+    });
+
+    const files = await qb.getMany();
+
+    for (const file of files) {
+      try {
+        unlinkSync(join(__dirname, '../..', 'uploads', file.filename));
+      } catch (error) {
+        console.log(`Failed to upload file: ${file.filename}`)
+      }
+    }
+
+    return qb
+      .where('id IN (:...ids) AND userId = :userId', {
+        ids: idsArray,
+        userId,
+      })
+      .softDelete()
+      .execute()
   }
 }

@@ -1,14 +1,19 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+
 import { UsersService } from './users.service';
-import { ApiTags } from '@nestjs/swagger';
+import { UserId } from 'src/decorators/user-id.decorator';
+import { JwtAuthGuard } from 'src/auth/guards/local-auth.guard';
 
 @Controller('users')
 @ApiTags('users')
+@ApiBearerAuth()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findByEmail(id);
+  @Get('/me')
+  @UseGuards(JwtAuthGuard)
+  getMe(@UserId() id: string) {
+    return this.usersService.findById(+id);
   }
 }
