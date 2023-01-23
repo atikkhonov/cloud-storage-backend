@@ -1,23 +1,31 @@
+/* eslint-disable prettier/prettier */
 import { Injectable } from '@nestjs/common';
-import { CreateFileDto } from './dto/create-file.dto';
-import { UpdateFileDto } from './dto/update-file.dto';
+import { InjectRepository } from '@nestjs/typeorm'
+import { Repository } from 'typeorm'
+
+import { FileEntity } from './entities/file.entity';
+import { generateId } from './storage';
 
 @Injectable()
 export class FilesService {
-  create(createFileDto: CreateFileDto) {
-    return 'This action adds a new file';
+  constructor(
+    @InjectRepository(FileEntity)
+    private repository: Repository<FileEntity>
+  ) {}
+
+  create(file: Express.Multer.File, userId: number) {
+    return this.repository.save({
+      fileId: generateId(),
+      filename: file.filename,
+      originalName: file.originalname,
+      size: file.size,
+      mimetype: file.mimetype,
+      user: { id: userId },
+    });
   }
 
   findAll() {
     return `This action returns all files`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} file`;
-  }
-
-  update(id: number, updateFileDto: UpdateFileDto) {
-    return `This action updates a #${id} file`;
   }
 
   remove(id: number) {
